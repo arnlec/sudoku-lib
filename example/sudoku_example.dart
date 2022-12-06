@@ -1,0 +1,98 @@
+import 'package:sudoku/sudoku.dart';
+
+void main() {
+  var solver = getSudoSolver();
+  var board = SudokuBoard([
+    '2',
+    '?',
+    '7',
+    '?',
+    '?',
+    '?',
+    '?',
+    '?',
+    '?',
+    '?',
+    '?',
+    '5',
+    '6',
+    '?',
+    '7',
+    '?',
+    '?',
+    '4',
+    '8',
+    '?',
+    '?',
+    '?',
+    '?',
+    '?',
+    '1',
+    '?',
+    '?',
+    '?',
+    '1',
+    '?',
+    '?',
+    '7',
+    '9',
+    '6',
+    '?',
+    '8',
+    '?',
+    '5',
+    '?',
+    '?',
+    '6',
+    '2',
+    '?',
+    '4',
+    '?',
+    '?',
+    '?',
+    '?',
+    '5',
+    '3',
+    '?',
+    '?',
+    '?',
+    '?',
+    '7',
+    '1',
+    '?',
+    '?',
+    '?',
+    '5',
+    '?',
+    '?',
+    '?',
+    '?',
+    '?',
+    '?',
+    '?',
+    '2',
+    '6',
+    '8',
+    '?',
+    '5',
+    '?',
+    '?',
+    '6',
+    '8',
+    '?',
+    '1',
+    '4',
+    '?',
+    '?'
+  ]);
+  try {
+    print("Try to resolve");
+    print(board);
+
+    var solution = solver.solve(board);
+    print("Solution is:");
+    print(solution);
+  } on NotResolvableException {
+    print("Can't resolve the board");
+  }
+}
