@@ -1,8 +1,9 @@
 import 'package:sudoku/sudoku.dart';
 
 void main() {
-  var solver = getSudoSolver();
-  var board = SudokuBoard([
+  var solver = getSudokuSolver();
+  var validator = SudokuGridValidator();
+  var grid = SudokuGrid([
     '2',
     '?',
     '7',
@@ -58,7 +59,7 @@ void main() {
     '?',
     '?',
     '7',
-    '1',
+    '?',
     '?',
     '?',
     '?',
@@ -85,14 +86,21 @@ void main() {
     '?',
     '?'
   ]);
-  try {
     print("Try to resolve");
-    print(board);
-
-    var solution = solver.solve(board);
-    print("Solution is:");
-    print(solution);
-  } on NotResolvableException {
-    print("Can't resolve the board");
-  }
+    print(grid);
+    if (validator.isValid(grid)){
+      try {
+        var solution = solver.solve(grid);
+        print("Solution is:");
+        print(solution);
+        print(validator.isSucceed(solution));
+      } on NotResolvableException catch (e) {
+        print("Can't resolve the grid");
+        print(e.grid);
+      }
+    }
+    else{
+      print("grid is not value");
+      print(grid);
+    }
 }

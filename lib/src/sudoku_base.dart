@@ -1,11 +1,13 @@
-class SudokuBoard {
-  static const int size=9;
+class SudokuGrid {
+  static const int size = 9;
   List<String> cells;
 
-  SudokuBoard(this.cells);
+  static const characters = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
-  SudokuBoard copy(SudokuBoard original){
-    return SudokuBoard([...cells]);
+  SudokuGrid(this.cells);
+
+  SudokuGrid copy(SudokuGrid original) {
+    return SudokuGrid([...cells]);
   }
 
   @override
@@ -16,93 +18,144 @@ class SudokuBoard {
         table += " --- --- --- --- --- --- --- --- ---\n";
       }
       table +=
-          "| ${cells[i*size]}   ${cells[i*size + 1]}   ${cells[i*size + 2]} | ${cells[i*size + 3]} ";
+          "| ${cells[i * size]}   ${cells[i * size + 1]}   ${cells[i * size + 2]} | ${cells[i * size + 3]} ";
       table +=
-          "  ${cells[i*size + 4]}   ${cells[i*size + 5]} | ${cells[i*size + 6]}   ${cells[i*size + 7]} ";
-      table += "  ${cells[i*size + 8]} | \n";
+          "  ${cells[i * size + 4]}   ${cells[i * size + 5]} | ${cells[i * size + 6]}   ${cells[i * size + 7]} ";
+      table += "  ${cells[i * size + 8]} | \n";
     }
     table += " --- --- --- --- --- --- --- --- ---";
     return table;
   }
 
-  String getCell(int row,int column){
-    return cells[row*SudokuBoard.size+column];
+  String getCell(int row, int column) {
+    return cells[row * SudokuGrid.size + column];
   }
-  
-  void setCell(int row, int column,String value){
-    cells[row*SudokuBoard.size+column]=value;
+
+  void setCell(int row, int column, String value) {
+    cells[row * SudokuGrid.size + column] = value;
+  }
+
+  List<String> getRow(int i) {
+    return cells
+        .getRange(
+            i * SudokuGrid.size, i * SudokuGrid.size + SudokuGrid.size - 1)
+        .toList();
+  }
+
+  List<String> getColumn(int i) {
+    return List<int>.generate(
+            SudokuGrid.size, (index) => index * SudokuGrid.size + i)
+        .map((e) => cells[e])
+        .toList();
+  }
+
+  List<String> getBlock(int i) {
+    var indexes = List<int>.generate(
+        SudokuGrid.size,
+        (idx) =>
+            ((i % 3) * 3 + (i ~/ 3) * 27) +
+            (SudokuGrid.size * (idx ~/ 3)) +
+            (idx % 3));
+    return indexes.map((e) => cells[e]).toList();
   }
 }
 
-abstract class SudokuSolver {
-  static const characters = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
+class SudokuGridValidator {
 
-  SudokuBoard solve(SudokuBoard board);
-
-  bool isValueInRow(SudokuBoard board,int row, String value){
-    return getRow(board, row).contains(value);
+  bool isValid(SudokuGrid grid){
+    return Iterable<int>.generate(9).toList()
+      .map((i) => rowIsValid(grid, i) && columnIsValid(grid, i) && blockIsValid(grid, i))
+      .reduce((value, element) => value && element );
   }
 
-  bool isEmptyValue(SudokuBoard board,int row, int column){
-    return !characters.contains(board.getCell(row, column));
+  bool isSucceed(SudokuGrid grid){
+    return gridIsCompleted(grid) && isValid(grid);
   }
 
-  bool isValueInColumn(SudokuBoard board, int column, String value){
-    return getColumn(board, column).contains(value);
-  }
-
-  bool isValueInBlock(SudokuBoard board, int blockId, String value){
-    return getBlock(board, blockId).contains(value);
-  }
-
-  bool isCorrectAt(SudokuBoard board, int row, int column, String value){
-    var blockId = (row ~/ 3)*3 + column ~/ 3;
-    return !isValueInBlock(board, blockId, value) &&
-      !isValueInColumn(board, column, value) &&
-      !isValueInRow(board, row, value); 
-  }
-
-  bool rowIsValid(SudokuBoard board, int i) {
-    var cells = getRow(board, i);
+  bool rowIsValid(SudokuGrid grid, int i) {
+    var cells = grid.getRow(i);
     return valuesAreUniq(cells);
   }
 
-  List<String> getRow(SudokuBoard board,int i){
-    return board.cells.getRange(i * SudokuBoard.size, i * SudokuBoard.size + SudokuBoard.size -1).toList();
-  }
-
-  bool columnIsValid(SudokuBoard board, int i) {
-    var cells = getColumn(board, i);
+  bool columnIsValid(SudokuGrid grid, int i) {
+    var cells = grid.getColumn(i);
     return valuesAreUniq(cells);
   }
 
-  List<String> getColumn(SudokuBoard board, int i){
-    return List<int>.generate(SudokuBoard.size, (index) => index * SudokuBoard.size + i)
-        .map((e) => board.cells[e])
-        .toList();
-  }
-
-  bool blockIsValid(SudokuBoard board, int i) {
-    var cells = getBlock(board, i);
+  bool blockIsValid(SudokuGrid grid, int i) {
+    var cells = grid.getBlock(i);
     return valuesAreUniq(cells);
   }
 
-  List<String> getBlock(SudokuBoard board, int i){
-    var indexes = List<int>.generate(SudokuBoard.size,
-        (idx) => ((i%3)*3+(i~/3)*27) +(SudokuBoard.size*(idx~/3))+(idx%3));
-    return indexes.map((e) => board.cells[e])
-        .toList();
-  }
-
-  bool boardIsCompleted(SudokuBoard board) {
-    return board.cells
-        .firstWhere((element) => !characters.contains(element),
+  bool gridIsCompleted(SudokuGrid grid) {
+    return grid.cells
+        .firstWhere((element) => !SudokuGrid.characters.contains(element),
             orElse: () => "")
         .isEmpty;
   }
 
   bool valuesAreUniq(List<String> cells) {
-    var cellsNumber = cells.where((element) => characters.contains(element));
+    var cellsNumber =
+        cells.where((element) => SudokuGrid.characters.contains(element));
+    var distinctValues = [
+      ...{...cellsNumber}
+    ];
+    return cellsNumber.length == distinctValues.length;
+  }
+}
+
+
+abstract class SudokuSolver {
+  SudokuGrid solve(SudokuGrid grid);
+
+  bool isValueInRow(SudokuGrid grid, int row, String value) {
+    return grid.getRow(row).contains(value);
+  }
+
+  bool isEmptyValue(SudokuGrid grid, int row, int column) {
+    return !SudokuGrid.characters.contains(grid.getCell(row, column));
+  }
+
+  bool isValueInColumn(SudokuGrid grid, int column, String value) {
+    return grid.getColumn(column).contains(value);
+  }
+
+  bool isValueInBlock(SudokuGrid grid, int blockId, String value) {
+    return grid.getBlock(blockId).contains(value);
+  }
+
+  bool isCorrectAt(SudokuGrid grid, int row, int column, String value) {
+    var blockId = (row ~/ 3) * 3 + column ~/ 3;
+    return !isValueInBlock(grid, blockId, value) &&
+        !isValueInColumn(grid, column, value) &&
+        !isValueInRow(grid, row, value);
+  }
+
+  bool rowIsValid(SudokuGrid grid, int i) {
+    var cells = grid.getRow(i);
+    return valuesAreUniq(cells);
+  }
+
+  bool columnIsValid(SudokuGrid grid, int i) {
+    var cells = grid.getColumn(i);
+    return valuesAreUniq(cells);
+  }
+
+  bool blockIsValid(SudokuGrid grid, int i) {
+    var cells = grid.getBlock(i);
+    return valuesAreUniq(cells);
+  }
+
+  bool gridIsCompleted(SudokuGrid grid) {
+    return grid.cells
+        .firstWhere((element) => !SudokuGrid.characters.contains(element),
+            orElse: () => "")
+        .isEmpty;
+  }
+
+  bool valuesAreUniq(List<String> cells) {
+    var cellsNumber =
+        cells.where((element) => SudokuGrid.characters.contains(element));
     var distinctValues = [
       ...{...cellsNumber}
     ];
@@ -111,29 +164,28 @@ abstract class SudokuSolver {
 }
 
 class NotResolvableException implements Exception {
-  SudokuBoard board;
-  NotResolvableException(this.board);
+  SudokuGrid grid;
+  NotResolvableException(this.grid);
 }
 
-SudokuSolver getSudoSolver() {
+SudokuSolver getSudokuSolver() {
   return RecursiveSudokuSolver();
 }
 
 class RecursiveSudokuSolver extends SudokuSolver {
   @override
-  SudokuBoard solve(SudokuBoard board) {
-    var copy = board.copy(board);
-    for(int i=0;i<SudokuBoard.size;i++){
-      for(int j=0;j<SudokuBoard.size;j++){
-        if (isEmptyValue(board, i, j)){
-          for(int idx = 0; idx < SudokuSolver.characters.length; idx++){
-            final value = SudokuSolver.characters[idx];
-            if (isCorrectAt(copy, i, j, value)){
+  SudokuGrid solve(SudokuGrid grid) {
+    var copy = grid.copy(grid);
+    for (int i = 0; i < SudokuGrid.size; i++) {
+      for (int j = 0; j < SudokuGrid.size; j++) {
+        if (isEmptyValue(grid, i, j)) {
+          for (int idx = 0; idx < SudokuGrid.characters.length; idx++) {
+            final value = SudokuGrid.characters[idx];
+            if (isCorrectAt(copy, i, j, value)) {
               copy.setCell(i, j, value);
               try {
                 return solve(copy);
-              }
-              catch(e){
+              } catch (e) {
                 copy.setCell(i, j, '?');
               }
             }
